@@ -1,0 +1,60 @@
+/* Make the overlay cover the whole page for better carousel visibility */
+.landing-page {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+.landing-page .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+    z-index: 2;
+}
+
+/* Optional: Fade animation for carousel */
+.landing-page {
+    transition: background-image 1s ease-in-out;
+}
+.button-group {
+    margin-top: 24px;
+}
+.button-group button {
+    margin: 0 12px;
+    padding: 12px 32px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 8px;
+    background: #1976d2;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.button-group button:hover {
+    background: #1565c0;
+}
+
+.chat-svg-anim {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+    animation: floatChat 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes floatChat {
+    0% {
+        transform: translateY(0px);
+    }
+    100% {
+        transform: translateY(-18px);
+    }
+}
