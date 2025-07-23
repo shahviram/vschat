@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './login.css'; 
+import { api } from '../../Service/ApiCalls';
+import { setUserCookies } from '../../utils/cookieUtils';
 
 function Login() {
     const [formData, setFormData] = useState({
-        username: '',
+        emailId: '',
         password: ''
     });
     const [errors, setErrors] = useState({});
@@ -29,8 +31,8 @@ function Login() {
     // form validation
     const validateForm = () => {
         const newErrors = {};
-        if (!formData.username.trim()) {
-            newErrors.username = 'Username is required.';
+        if (!formData.emailId.trim()) {
+            newErrors.emailId = 'Email is required.';
         }
         if (!formData.password) {
             newErrors.password = 'Password is required.';
@@ -47,29 +49,29 @@ function Login() {
         if (validateForm()) {
             setLoading(true); 
             try {
-                
-                const response = await fetch('/loginUser', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData),
-                });
-
-                if (response.ok) {
-                    
-                    const data = await response.json();
-                    setSubmissionMessage({ type: 'success', text: data.message || 'Login successful!' });
-                    
-                    setTimeout(() => navigate('/chat'), 500); 
+                const response = await api.authenticate(formData);
+                // Store user details in cookies
+                if (response && response.data) {
+                    setUserCookies({
+                        id: response.data.id,
+                        userID: response.data.userID,
+                        firstname: response.data.firstName,
+                        lastname: response.data.lastName,
+                        emailId: response.data.emailId
+                    });
+                    setSubmissionMessage({ 
+                        type: 'success', 
+                        text: 'Login successful! Redirecting...' 
+                    });
+                    setTimeout(() => navigate('/chat'), 1000);
                 } else {
-                    const data = await response.json();
-                    setSubmissionMessage({ type: 'danger', text: data.message || 'Login failed. Please check your credentials.' });
+                    throw new Error('Invalid response format from server');
                 }
             } catch (error) {
-                setSubmissionMessage({ type: 'danger', text: `Login failed: ${error.message}` });
+                console.error('Login error:', error);
+                setSubmissionMessage({ type: 'danger', text: error.message || 'Login failed. Please check your credentials.' });
             } finally {
-                setLoading(false); 
+                setLoading(false);
             }
         }
     };
@@ -85,18 +87,96 @@ function Login() {
                                 <p className="text-muted">Please login to your account</p>
                             </div>
                             <form onSubmit={handleSubmit} noValidate>
-                                <div className="mb-3"> 
-                                    <label htmlFor="usernameInput" className="form-label">Username</label> 
+                                <div className="mb-3">
+                                    <label htmlFor="emailInput" className="form-label">Email</label>
+                                    <input
+                                        type="email"
+                                        className={`form-control ${errors.emailId ? 'is-invalid' : ''}`}
+                                        id="emailInput"
+                                        name="emailId"
+                                        placeholder="Enter your email"
+                                        value={formData.emailId}
+                                        onChange={handleChange}
+                                        required
+                                        onBlur={validateForm}
+                                    />
+                                    {errors.emailId && <div className="invalid-feedback">{errors.emailId}</div>}
+                                </div>
+
+                                <div className="mb-4">
+                                    <label htmlFor="passwordInput" className="form-label">Password</label>
+                                    <input
+                                        type="password"
+                                        className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                                        id="passwordInput"
+                                        name="password"
+                                        placeholder="Enter your password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        required
+                                        onBlur={validateForm}
+                                    />
+                                    {errors.password && <div className="invalid-feedback">{errors.password}</div>}
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary w-100 mb-3 btn-lg"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Logging in...' : 'Login'}
+                                </button>
+
+                                {submissionMessage && (
+                                    <div className={`alert alert-${submissionMessage.type} mt-3 text-center`} role="alert">
+                                        {submissionMessage.text}
+                                    </div>
+                                )}
+
+                                <div className="text-center">
+                                    <small className="text-muted">
+                                        Don't have an account?
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate('/register')}
+                                            className="btn btn-link p-0 ms-1"
+                                            disabled={loading}
+                                        >
+                                            Sign up
+                                        </button>
+                                    </small>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="container-fluid login-container">
+            <div className="row justify-content-center align-items-center min-vh-100">
+                <div className="col-11 col-sm-8 col-md-6 col-lg-4">
+                    <div className="card shadow-lg">
+                        <div className="card-body p-5">
+                            <div className="text-center mb-4">
+                                <h2 className="fw-bold">Welcome Back!</h2>
+                                <p className="text-muted">Please login to your account</p>
+                            </div>
+                            <form onSubmit={handleSubmit} noValidate>
+                                <div className="mb-3">
+                                    <label htmlFor="usernameInput" className="form-label">Username</label>
                                     <input
                                         type="text"
                                         className={`form-control ${errors.username ? 'is-invalid' : ''}`}
                                         id="usernameInput"
-                                        name="username" 
+                                        name="username"
                                         placeholder="Enter your username"
                                         value={formData.username}
                                         onChange={handleChange}
                                         required
-                                        onBlur={validateForm} 
+                                        onBlur={validateForm}
                                     />
                                     {errors.username && <div className="invalid-feedback">{errors.username}</div>}
                                 </div>
@@ -105,14 +185,14 @@ function Login() {
                                     <label htmlFor="passwordInput" className="form-label">Password</label>
                                     <input
                                         type="password"
-                                        className={`form-control ${errors.password ? 'is-invalid' : ''}`} 
+                                        className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                                         id="passwordInput"
-                                        name="password" 
+                                        name="password"
                                         placeholder="Enter your password"
                                         value={formData.password}
                                         onChange={handleChange}
                                         required
-                                        onBlur={validateForm} 
+                                        onBlur={validateForm}
                                     />
                                     {errors.password && <div className="invalid-feedback">{errors.password}</div>}
                                 </div>
@@ -120,7 +200,7 @@ function Login() {
                                 <button
                                     type="submit"
                                     className="btn btn-primary w-100 mb-3 btn-lg"
-                                    disabled={loading} 
+                                    disabled={loading}
                                 >
                                     {loading ? 'Logging in...' : 'Login'}
                                 </button>

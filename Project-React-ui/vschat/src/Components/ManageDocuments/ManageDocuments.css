@@ -1,0 +1,23 @@
+.upload-section {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.my-documents-section,
+.shared-documents-section {
+    margin-top: 30px;
+}
+
+.table th {
+    background-color: #f8f9fa;
+}
+
+.modal-dialog {
+    max-width: 600px;
+}
+
+select[multiple] {
+    height: 200px !important;
+}

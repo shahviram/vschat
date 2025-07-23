@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './register.css'; // Assuming your custom CSS is still relevant
-import countries from '../Countries/Countries'; // Path might vary based on your project structure
+import './register.css';
+import countries from '../Countries/Countries';
+import { api } from '../../Service/ApiCalls';
 
 function Register() {
     const navigate = useNavigate();
@@ -57,30 +58,37 @@ function Register() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setSubmissionMessage(null); // Clear previous messages
+        setSubmissionMessage(null);
 
         if (validateForm()) {
-            setLoading(true); // Start loading
+            setLoading(true);
             try {
-                const response = await fetch('/registerUser', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData),
+                const response = await api.register({
+                    email: formData.email,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    country: formData.country,
+                    password: formData.password
                 });
 
-                if (response.ok) {
-                    setSubmissionMessage({ type: 'success', text: 'Registration successful! Redirecting to login...' });
-                    setTimeout(() => navigate('/login'), 1500); // Redirect after a short delay
-                } else {
-                    const data = await response.json();
-                    setSubmissionMessage({ type: 'danger', text: data.message || 'Registration failed.' });
-                }
+                setSubmissionMessage({ 
+                    type: 'success', 
+                    text: 'Registration successful! Redirecting to login...' 
+                });
+                setTimeout(() => navigate('/login'), 1500);
             } catch (error) {
-                setSubmissionMessage({ type: 'danger', text: `Registration failed: ${error.message}` });
+                console.error('Registration error details:', {
+                    message: error.message,
+                    response: error.response,
+                    status: error.response?.status,
+                    headers: error.response?.headers,
+                });
+                setSubmissionMessage({ 
+                    type: 'danger', 
+                    text: error.message || 'Registration failed. Please try again.' 
+                });
             } finally {
-                setLoading(false); // Stop loading
+                setLoading(false);
             }
         }
     };
